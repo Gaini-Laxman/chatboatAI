@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chatbot</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css"> <!-- Optional: Link to your styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+    }
+    #messages {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 20px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #e9ecef;
+    }
+    form {
+      display: flex;
+      justify-content: space-between;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      margin-right: 10px;
+    }
+    input[type="button"] {
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ChatBot</h1>
+  <div id="messages">
+    <!-- Messages will be displayed here -->
+  </div>
+
+  <form id="messageForm">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <input type="button" id="sendOrFetchBtn" value="Send/Fetch">
+    <input type="button" id="updateBtn" value="Update" style="display:none;">
+    <input type="hidden" id="messageId">
+  </form>
+
+  <script>
+    const form = document.getElementById('messageForm');
+    const messagesDiv = document.getElementById('messages');
+    const sendOrFetchBtn = document.getElementById('sendOrFetchBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const messageIdInput = document.getElementById('messageId');
+
+    // Function to fetch messages from the API
+    async function fetchMessages() {
+      try {
+        const response = await fetch('http://localhost:8000/api/chat/messages');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        messagesDiv.innerHTML = '';
+        data.forEach(message => {
+          const messageElement = document.createElement('div');
+          messageElement.className = 'message';
+          messageElement.textContent = `${message.sender}: ${message.content}`;
+          messageElement.onclick = () => populateUpdateForm(message);
+          messagesDiv.appendChild(messageElement);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    }
+
+    // Populate form for updating a message
+    function populateUpdateForm(message) {
+      document.getElementById('messageInput').value = message.content;
+      messageIdInput.value = message.id; // Assuming each message has a unique ID
+      sendOrFetchBtn.style.display = 'none'; // Hide send/fetch button
+      updateBtn.style.display = 'inline'; // Show update button
+    }
+
+    // Send message or update existing message
+    sendOrFetchBtn.addEventListener('click', async function() {
+      const newMessage = document.getElementById('messageInput').value.trim();
+      if (newMessage) {
+        try {
+          const response = await fetch('http://localhost:8000/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: newMessage, sender: 'User' })
+          });
+          if (!response.ok) throw new Error('Network response was not ok');
+          await response.json();
+          fetchMessages();
+        } catch (error) {
+          console.error('Error sending message:', error);
+        }
+        document.getElementById('messageInput').value = '';
+      } else {
+        fetchMessages();
+      }
+    });
+
+    // Update existing message
+    updateBtn.addEventListener('click', async function() {
+      const messageId = messageIdInput.value;
+      const updatedMessage = document.getElementById('messageInput').value.trim();
+
+      if (updatedMessage && messageId) {
+        try {
+          const response = await fetch(`http://localhost:8000/api/chat/messages/${messageId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: updatedMessage , sender: 'User'})
+          });
+          if (!response.ok) throw new Error('Network response was not ok');
+          await response.json();
+          fetchMessages();
+          resetForm();
+        } catch (error) {
+          console.error('Error updating message:', error);
+        }
+      }
+    });
+
+    // Reset form fields
+    function resetForm() {
+      document.getElementById('messageInput').value = '';
+      messageIdInput.value = '';
+      sendOrFetchBtn.style.display = 'inline';
+      updateBtn.style.display = 'none';
+    }
+
+    // Fetch messages on page load
+    fetchMessages();
+  </script>
+  <app-root></app-root>
+</body>
+</html>

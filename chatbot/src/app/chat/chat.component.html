@@ -1,0 +1,33 @@
+<div class="chat-container">
+    <div *ngFor="let message of messages" class="message">
+      <strong>{{ message.sender }}:</strong> {{ message.content }}
+    </div>
+  </div>
+  
+  <input 
+    [(ngModel)]="newMessage" 
+    (keyup.enter)="sendMessage()" 
+    placeholder="Type a message..." 
+    class="message-input" 
+  />
+  
+  <style>
+    .chat-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+  
+    .message {
+      margin: 5px 0;
+    }
+  
+    .message-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+  
