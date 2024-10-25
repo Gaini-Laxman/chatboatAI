@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.klinnovations.entity.Message;
 import com.klinnovations.service.ChatService;
 
+//http://localhost:8000/swagger-ui/index.html#/
+
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/chat")
